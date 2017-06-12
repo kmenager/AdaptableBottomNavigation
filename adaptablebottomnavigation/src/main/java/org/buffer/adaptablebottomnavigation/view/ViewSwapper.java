@@ -8,15 +8,14 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v4.os.ParcelableCompat;
 import android.support.v4.os.ParcelableCompatCreatorCallbacks;
+import android.support.v4.view.AbsSavedState;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
-
-import org.buffer.adaptablebottomnavigation.model.ItemInfo;
-import org.buffer.adaptablebottomnavigation.adapter.ViewSwapperAdapter;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import org.buffer.adaptablebottomnavigation.adapter.ViewSwapperAdapter;
+import org.buffer.adaptablebottomnavigation.model.ItemInfo;
 
 public class ViewSwapper extends FrameLayout {
 
@@ -139,7 +138,7 @@ public class ViewSwapper extends FrameLayout {
      * state, in which case it should implement a subclass of this which
      * contains that state.
      */
-    public static class SavedState extends BaseSavedState {
+    public static class SavedState extends AbsSavedState {
         int position;
         Parcelable adapterState;
         ClassLoader loader;
@@ -148,11 +147,23 @@ public class ViewSwapper extends FrameLayout {
             super(superState);
         }
 
+        public SavedState(Parcel in, ClassLoader loader) {
+            super(in, loader);
+            readFromParcel(in, loader);
+        }
+
         @Override
         public void writeToParcel(Parcel out, int flags) {
             super.writeToParcel(out, flags);
             out.writeInt(position);
             out.writeParcelable(adapterState, flags);
+        }
+
+        private void readFromParcel(Parcel in, ClassLoader loader) {
+            position = in.readInt();
+            adapterState = in.readParcelable(
+                loader != null ? loader : ViewSwapperAdapter.class.getClassLoader());
+            this.loader = loader;
         }
 
         @Override
@@ -174,16 +185,6 @@ public class ViewSwapper extends FrameLayout {
                 return new SavedState[size];
             }
         });
-
-        SavedState(Parcel in, ClassLoader loader) {
-            super(in);
-            if (loader == null) {
-                loader = getClass().getClassLoader();
-            }
-            position = in.readInt();
-            adapterState = in.readParcelable(loader);
-            this.loader = loader;
-        }
     }
 
     @Override
